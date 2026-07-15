@@ -1,6 +1,7 @@
 [submodule "lsp"]
 	path = lsp
-	url = ./lsp
+	url = https://github.com/haskell/lsp
 [submodule "network"]
 	path = network
-	url = ./network
+    url = https://github.com/haskell-wasm/network
+    branch = wasi
