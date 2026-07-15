@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<title>Hello, hs-lsp-reactor</title>
+
+<script type="module">
+import jsffi from './jsffi.js'
+import { WASI, File, ConsoleStdout } from './wasi-shim.js'
+
+let wasi = new WASI([], [], [
+  new File([]),
+  ConsoleStdout.lineBuffered(msg => console.warn(`[WASI stdout] ${msg}`)),
+  ConsoleStdout.lineBuffered(msg => console.warn(`[WASI stderr] ${msg}`)),
+], { debug: false });
+
+const ffiExports = {}
+const ffiImports = await jsffi(ffiExports)
+console.log('ffi imports', ffiImports)
+
+const instance = (
+  await WebAssembly.instantiateStreaming(fetch('hs-lsp-reactor.wasm'), {
+    wasi_snapshot_preview1: wasi.wasiImport,
+    ghc_wasm_jsffi: ffiImports,
+  })
+).instance;
+
+Object.assign(ffiExports, instance.exports)
+console.log('ffi exports', ffiExports)
+
+// The initialize() method will call the module's _initialize export
+// under the hood. This is only true for the wasi implementation used
+// in this example! If you're using another wasi implementation, do
+// read its source code to figure out whether you need to manually
+// call the module's _initialize export!
+wasi.initialize(instance);
+
+// This function is a part of GHC's RTS API. It must be called before
+// any other exported Haskell functions are called.
+await instance.exports.hs_init(0, 0);
+
+const ls = await instance.exports.new_language_server()
+let exited = false
+const res = instance.exports.run_language_server(ls).then(() => exited = true)
+
+function sendRpc(obj) {
+  const payload = JSON.stringify(obj)
+  return instance.exports.send_message(ls, `Content-Length: ${payload.length}\r\n\r\n${payload}`)
+}
+
+await sendRpc({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: {
+        processId: 1234,
+        rootUri: 'file:///',
+        capabilities: {},
+    },
+})
+
+const msg = await instance.exports.recv_message(ls)
+
+await sendRpc({ jsonrpc: '2.0', method: 'initialized', params: {} })
+
+;(async () => {
+    while (!exited) {
+        const msg = await instance.exports.recv_message(ls)
+        console.log('recv', JSON.parse(msg.split('\r\n\r\n')[1]))
+    }
+    console.warn('exited')
+})()
+
+for (let i = 0; i < 100; i++) {
+    await sendRpc({
+        jsonrpc: '2.0',
+        id: i+2,
+        method: 'xxx' + i,
+        params: {}
+    })
+}
+
+await sendRpc({
+    jsonrpc: '2.0',
+    id: 999,
+    method: 'shutdown',
+    params: null,
+})
+
+await sendRpc({
+    jsonrpc: '2.0',
+    id: 1000,
+    method: 'exit',
+    params: null,
+})
+</script>
+
+<body></body>

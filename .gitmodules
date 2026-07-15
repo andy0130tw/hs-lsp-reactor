@@ -1,0 +1,6 @@
+[submodule "lsp"]
+	path = lsp
+	url = ./lsp
+[submodule "network"]
+	path = network
+	url = ./network
