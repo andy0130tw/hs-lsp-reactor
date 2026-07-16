@@ -27,7 +27,7 @@ import Language.LSP.Protocol.Message
 import Language.LSP.Logging (defaultClientLogger)
 
 import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar)
-import Foreign.StablePtr (StablePtr, newStablePtr, deRefStablePtr)
+import Foreign.StablePtr (StablePtr, newStablePtr, freeStablePtr, deRefStablePtr)
 
 data Env = Env
   { incomingMessage :: MVar B.StrictByteString
@@ -42,6 +42,9 @@ foreign export javascript "new_language_server"
 
 foreign export javascript "run_language_server"
   runLanguageServer :: ServerHandle -> IO Int
+
+foreign export javascript "free_language_server"
+  freeLanguageServer :: ServerHandle -> IO ()
 
 foreign export javascript "send_message"
   sendMessage :: ServerHandle -> JSString -> IO ()
@@ -78,9 +81,10 @@ initialEnv :: IO Env
 initialEnv = Env <$> newEmptyMVar <*> newEmptyMVar
 
 newLanguageServer :: IO ServerHandle
-newLanguageServer = do
-  env <- initialEnv
-  newStablePtr env
+newLanguageServer = initialEnv >>= newStablePtr
+
+freeLanguageServer :: ServerHandle -> IO ()
+freeLanguageServer = freeStablePtr
 
 runLanguageServer :: ServerHandle -> IO Int
 runLanguageServer hdl = do

@@ -65,7 +65,9 @@ await sendRpc({ jsonrpc: '2.0', method: 'initialized', params: {} })
         const msg = await instance.exports.recv_message(ls)
         console.log('recv', JSON.parse(msg.split('\r\n\r\n')[1]))
     }
-    console.warn('exited')
+    console.info('exited')
+    await instance.exports.free_language_server(ls)
+    console.info('Done!')
 })()
 
 for (let i = 0; i < 100; i++) {

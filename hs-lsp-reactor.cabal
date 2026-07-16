@@ -80,4 +80,4 @@ executable hs-lsp-reactor
     default-language: Haskell2010
 
     ghc-options:      -no-hs-main -optl-mexec-model=reactor
-                      -optl-Wl,--export=hs_init,--export=new_language_server,--export=run_language_server,--export=send_message,--export=recv_message
+                      -optl-Wl,--export=hs_init,--export=new_language_server,--export=free_language_server,--export=run_language_server,--export=send_message,--export=recv_message
