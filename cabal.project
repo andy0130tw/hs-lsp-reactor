@@ -2,4 +2,3 @@ packages:
   .
   lsp/lsp
   lsp/lsp-types
-  network
