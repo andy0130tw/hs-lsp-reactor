@@ -2,3 +2,6 @@ packages:
   .
   lsp/lsp
   lsp/lsp-types
+
+package lsp
+  flags: -websocket

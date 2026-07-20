@@ -13,10 +13,13 @@ import Colog.Core (LogAction (..), WithSeverity (..))
 import qualified Colog.Core as L
 
 import qualified Data.Aeson as Aeson
-import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Char8 as C
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import Data.Text.Encoding (encodeUtf8)
+import Data.Text.Lazy.Encoding (decodeUtf8)
+
 import Prettyprinter
 import GHC.Generics (Generic)
 import Control.Monad.Reader
@@ -117,7 +120,7 @@ runLanguageServer hdl = do
     serverInwards = takeMVar (incomingMessage lsEnv)
 
     serverOutwards :: BL.LazyByteString -> IO ()
-    serverOutwards s = (return . C.unpack . BL.toStrict) s >>= putMVar (outgoingMessage lsEnv)
+    serverOutwards s = (return . TL.unpack . decodeUtf8) s >>= putMVar (outgoingMessage lsEnv)
 
   runServerWithConfig serverConfig serverDefinition
 
@@ -146,7 +149,7 @@ sendMessage :: ServerHandle -> JSString -> IO ()
 sendMessage hdl s = do
   env <- deRefStablePtr hdl
   let input = fromJSString s
-  putMVar (incomingMessage env) (C.pack input)
+  putMVar (incomingMessage env) $ (encodeUtf8 . T.pack) input
   return ()
 
 recvMessage :: ServerHandle -> IO JSString
