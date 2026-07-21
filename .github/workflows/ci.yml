@@ -37,12 +37,13 @@ jobs:
 
       - name: Setup Haskell WASM
         run: |
+          ghcup install cabal latest
+
           if [ ! -f ~/.ghc-wasm/env ]; then
             GHC_WASM_META_COMMIT_HASH=60098a5076557e327b326a1a3ba3b5fb4fec1e49
             git clone https://gitlab.haskell.org/ghc/ghc-wasm-meta.git --revision=$GHC_WASM_META_COMMIT_HASH --depth=1
             cd ghc-wasm-meta/
-            export SKIP_GHC=yes
-            ./setup.sh
+            FLAVOUR=9.10 SKIP_GHC=yes ./setup.sh
             cd ..
           fi
           source ~/.ghc-wasm/env
@@ -52,25 +53,23 @@ jobs:
           GHC_WASM_ID=$(ghcup list -t ghc -r | grep wasm32-wasi-9.10 | tail -n1 | cut -d" " -f2)
           echo "Will install $GHC_WASM_ID"
           ghcup install ghc "$GHC_WASM_ID" -- --host=x86_64-linux --with-intree-gmp --with-system-libffi
-          ghcup install cabal latest
           mkdir ~/.ghc-wasm/.cabal
-          mkdir ~/.ghc-wasm/wasm32-wasi-cabal
-          cat > ~/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal <<"EOF"
+          mkdir -p ~/.ghc-wasm/wasm32-wasi-cabal/bin
+          cat > ~/.ghc-wasm/wasm32-wasi-cabal/bin/wasm32-wasi-cabal <<"EOF"
           #!/bin/sh
           CABAL_DIR=$HOME/.ghc-wasm/.cabal \
           exec cabal \
-          --with-compiler=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-ghc \
-          --with-hc-pkg=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-ghc-pkg \
-          --with-hsc2hs=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-hsc2hs \
+          --with-compiler=$(dirname $(which wasm32-wasi-ghc))/../bin/wasm32-wasi-ghc \
+          --with-hc-pkg=$(dirname $(which wasm32-wasi-ghc))/../bin/wasm32-wasi-ghc-pkg \
+          --with-hsc2hs=$(dirname $(which wasm32-wasi-ghc))/../bin/wasm32-wasi-hsc2hs \
           ${1+"$@"}
           EOF
-          chmod +x ~/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal
-          ~/.ghc-wasm/wasm32-wasi-cabal update
+          chmod +x ~/.ghc-wasm/wasm32-wasi-cabal/bin/wasm32-wasi-cabal
+          wasm32-wasi-cabal update
 
       - name: Build
         run: |
           source ~/.ghc-wasm/env
-          export PATH=$HOME/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal:$PATH
           ./build.sh
 
       - name: Upload artifacts
