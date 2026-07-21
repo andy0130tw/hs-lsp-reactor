@@ -37,6 +37,6 @@ jobs:
         run: |
           ghcup config add-release-channel https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/ghcup-wasm-0.0.9.yaml
           echo "Fetching ghc versions..."
-          GHC_WASM_ID=$(ghcup list -t ghc -r | grep wasm32-wasi-9.10 | cut -d" " -f2)
+          GHC_WASM_ID=$(ghcup list -t ghc -r | grep wasm32-wasi-9.10 | tail -n1 | cut -d" " -f2)
           echo "Will install $GHC_WASM_ID"
-          ghcup install "$GHC_WASM_ID"
+          ghcup install ghc "$GHC_WASM_ID"
