@@ -49,3 +49,15 @@ jobs:
           echo "Will install $GHC_WASM_ID"
           ghcup install ghc "$GHC_WASM_ID" -- --host=x86_64-linux --with-intree-gmp --with-system-libffi && true
           cat /usr/local/.ghcup/logs/*
+
+      - name: Build
+        run: |
+          ./build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build
+          path: |
+            hs-lsp-reactor.wasm
+            jsffi.js
