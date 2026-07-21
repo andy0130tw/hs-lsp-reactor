@@ -81,3 +81,5 @@ executable hs-lsp-reactor
 
     ghc-options:      -no-hs-main -optl-mexec-model=reactor
                       -optl-Wl,--export=hs_init,--export=new_language_server,--export=free_language_server,--export=run_language_server,--export=send_message,--export=recv_message
+    extra-source-files: main.c
+    c-sources:          main.c
