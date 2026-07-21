@@ -1,0 +1,39 @@
+name: CI
+on:
+  push:
+    branches: [ci]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build via Cabal
+    runs-on: ubuntu-22.04
+    # strategy:
+    #   fail-fast: true
+    #   matrix:
+    #     ghc-ver:
+    #       - 9.10
+    #       - 9.12
+    #       - 9.14
+    env:
+      GHC_VER: ${ matrix.ghc-ver }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Setup cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.ghc-wasm
+          key: ghc-wasm-${{ runner.os }}
+
+      - name: Setup ghcup
+        uses: haskell/ghcup-setup@v1
+
+      - name: Setup Haskell WASM
+        run: |
+          ghcup config add-release-channel https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/ghcup-wasm-0.0.9.yaml
+          ghcup list -r
