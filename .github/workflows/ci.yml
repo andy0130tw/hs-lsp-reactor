@@ -27,7 +27,9 @@ jobs:
       - name: Setup cache
         uses: actions/cache@v6
         with:
-          path: ~/.ghc-wasm
+          path: |
+            ~/.ghc-wasm
+            /usr/local/.ghcup
           key: ghc-wasm-${{ runner.os }}
 
       - name: Setup ghcup
@@ -35,13 +37,15 @@ jobs:
 
       - name: Setup Haskell WASM
         run: |
-          GHC_WASM_META_COMMIT_HASH=60098a5076557e327b326a1a3ba3b5fb4fec1e49
-          git clone https://gitlab.haskell.org/ghc/ghc-wasm-meta.git --revision=$GHC_WASM_META_COMMIT_HASH --depth=1
-          cd ghc-wasm-meta/
-          export SKIP_GHC=yes
-          ./setup.sh
+          if [ ! -f ~/.ghc-wasm/env ]; then
+            GHC_WASM_META_COMMIT_HASH=60098a5076557e327b326a1a3ba3b5fb4fec1e49
+            git clone https://gitlab.haskell.org/ghc/ghc-wasm-meta.git --revision=$GHC_WASM_META_COMMIT_HASH --depth=1
+            cd ghc-wasm-meta/
+            export SKIP_GHC=yes
+            ./setup.sh
+            cd ..
+          fi
           source ~/.ghc-wasm/env
-          cd ..
 
           ghcup config add-release-channel https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/$GHC_WASM_META_COMMIT_HASH/ghcup-wasm-0.0.9.yaml
           echo "Fetching ghc versions..."
@@ -52,6 +56,7 @@ jobs:
 
       - name: Build
         run: |
+          source ~/.ghc-wasm/env
           ./build.sh
 
       - name: Upload artifacts
