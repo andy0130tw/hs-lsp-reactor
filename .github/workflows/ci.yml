@@ -51,12 +51,26 @@ jobs:
           echo "Fetching ghc versions..."
           GHC_WASM_ID=$(ghcup list -t ghc -r | grep wasm32-wasi-9.10 | tail -n1 | cut -d" " -f2)
           echo "Will install $GHC_WASM_ID"
-          ghcup install ghc "$GHC_WASM_ID" -- --host=x86_64-linux --with-intree-gmp --with-system-libffi && true
-          cat /usr/local/.ghcup/logs/*
+          ghcup install ghc "$GHC_WASM_ID" -- --host=x86_64-linux --with-intree-gmp --with-system-libffi
+          ghcup install cabal latest
+          mkdir ~/.ghc-wasm/.cabal
+          mkdir ~/.ghc-wasm/wasm32-wasi-cabal
+          cat > ~/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal <<"EOF"
+          #!/bin/sh
+          CABAL_DIR=$HOME/.ghc-wasm/.cabal \
+          exec cabal \
+          --with-compiler=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-ghc \
+          --with-hc-pkg=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-ghc-pkg \
+          --with-hsc2hs=$(which wasm32-wasi-ghc)/bin/wasm32-wasi-hsc2hs \
+          ${1+"$@"}
+          EOF
+          chmod +x ~/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal
+          ~/.ghc-wasm/wasm32-wasi-cabal update
 
       - name: Build
         run: |
           source ~/.ghc-wasm/env
+          export PATH=$HOME/.ghc-wasm/wasm32-wasi-cabal/wasm32-wasi-cabal:$PATH
           ./build.sh
 
       - name: Upload artifacts
