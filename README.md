@@ -4,11 +4,8 @@ A quick PoC of Haskell's `lsp` package compiled into a WASI reactor module.
 
 ## Building
 
-0. You have setup the ghc-wasm environment in your home directory.
-1. (Already done for you) ~~Patch `lsp` to remove WebSocket support:~~
-   - `lsp/lsp/lsp.cabal`: Comment out the line `, websockets            ^>=0.13`.
-   - `lsp/lsp/src/Language/LSP/Server/Control.hs`: Comment out all definitions of `WebsocketConfig`, `withWebsocket`, and `withWebsocketRunServer`.
-2. Run `build.sh`. The resulting WASM binary will be copied to project root.
+0. You have setup the ghc-wasm environment in your home directory. Also, clone the `lsp` submodule pointing to the unreleased lsp package containing [these](https://github.com/haskell/lsp/pull/643) [patches](https://github.com/haskell/lsp/pull/644).
+1. Run `build.sh`. The resulting WASM binary will be copied to project root.
 
 ## Post-processing
 
