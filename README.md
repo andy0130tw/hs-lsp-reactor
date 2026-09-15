@@ -13,6 +13,10 @@ The `hs-lsp-reactor.wizer.wasm` is built according to [this section of ghc-wasm-
 
 The `*.oz.wasm` are The original and wizer-processed files optmizied via `wasm-opt -Oz in.wasm -o out.wasm`.
 
-## Sample wrapper
+## Browser usage
+
+To try it in your browser, see `index.html`. Note that a WASI standalone executable requires [cross-origin isolation](https://developer.mozilla.org/en-US/docs/Web/API/Window/crossOriginIsolated) for it to communicate properly, which is a tough requirement on most static-host content. Compiling it to a reactor module can bypass this restriction, since Haskell process can better integrate with JS's event loop.
+
+## Sample Node.js wrapper
 
 The directory `wrapper` contains a minimal NodeJS project to "wrap" it into a language server that works on stdin/stdout. Run `run-lsp.sh`. This way, the reactor module can be used as a drop-in replacement for editor plugins that expect a path to executable. (Beware the [security concern](https://nodejs.org/api/wasi.html#webassembly-system-interface-wasi) though!)
